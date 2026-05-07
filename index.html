@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>WateenSync</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede9;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9a9a96;
+    --border: rgba(0,0,0,0.10);
+    --border2: rgba(0,0,0,0.20);
+    --radius: 10px;
+    --radius-lg: 14px;
+    --font: 'Segoe UI', system-ui, sans-serif;
+    --green: #1D9E75; --green-bg: #EAF3DE; --green-text: #3B6D11;
+    --red: #D85A30; --red-bg: #FCEBEB; --red-text: #A32D2D;
+    --amber-bg: #FAEEDA; --amber-text: #854F0B;
+    --blue: #378ADD; --blue-bg: #E6F1FB; --blue-text: #185FA5;
+    --nav-h: 60px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+      --text: #f0efe9; --text2: #a0a09a; --text3: #6a6a65;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.18);
+      --green-bg: #0a2e1e; --green-text: #5DCAA5;
+      --red-bg: #2e0f0f; --red-text: #F09595;
+      --amber-bg: #2e1f05; --amber-text: #EF9F27;
+      --blue-bg: #061a30; --blue-text: #85B7EB;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: var(--font); background: var(--bg3); color: var(--text); min-height: 100vh; min-height: -webkit-fill-available; overflow-x: hidden; }
+
+  /* ── Layout ── */
+  #appWrapper { display: none; }
+  .page-header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg); border-bottom: 0.5px solid var(--border);
+    padding: 12px 16px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .page-header h1 { font-size: 18px; font-weight: 700; color: var(--text); display:flex; align-items:center; gap:7px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .wrapper { padding: 14px 14px calc(var(--nav-h) + var(--safe-bottom) + 16px); max-width: 680px; margin: 0 auto; }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: var(--bg); border-top: 0.5px solid var(--border);
+    display: flex; padding-bottom: var(--safe-bottom);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .bottom-nav button {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 8px 4px; border: none; background: transparent;
+    color: var(--text3); font-size: 10px; font-family: var(--font); cursor: pointer;
+    transition: color 0.15s; letter-spacing: 0.01em; min-height: 54px;
+  }
+  .bottom-nav button i { font-size: 22px; transition: transform 0.15s; }
+  .bottom-nav button.active { color: var(--blue); }
+  .bottom-nav button.active i { transform: scale(1.1); }
+  .bottom-nav button:active { opacity: 0.7; }
+
+  /* ── Business pills (horizontal scroll) ── */
+  .biz-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; padding: 0 14px 10px; margin: 0 -14px; scrollbar-width: none; }
+  .biz-scroll::-webkit-scrollbar { display: none; }
+  .biz-tabs { display: inline-flex; gap: 6px; padding: 2px 0; }
+  .biz-tab-wrap { display: inline-flex; align-items: center; gap: 0; }
+  .biz-tab {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 20px; font-size: 13px;
+    cursor: pointer; border: 0.5px solid var(--border); background: var(--bg);
+    color: var(--text2); font-weight: 400; font-family: var(--font); transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .biz-tab.active { font-weight: 600; color: var(--text); background: var(--bg2); border-color: var(--border2); }
+  .biz-tab-edit { padding: 4px 6px; border-radius: 6px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 12px; }
+  .biz-tab-edit:active { background: var(--bg3); }
+
+  /* ── Metric cards ── */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .metric { background: var(--bg); border-radius: var(--radius); padding: 14px 14px; border: 0.5px solid var(--border); }
+  .metric .label { font-size: 11px; color: var(--text2); margin-bottom: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .metric .value { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .metric .sub { font-size: 11px; margin-top: 4px; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+
+  /* ── Cards ── */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 10px; }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
+
+  /* ── Tables → responsive cards on mobile ── */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
+  th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; color: var(--text2); border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 11px 10px; color: var(--text); border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+
+  /* Mobile row-cards for transactions */
+  .txn-cards { display: none; }
+  .txn-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+  .txn-card-left { flex: 1; min-width: 0; }
+  .txn-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+  .txn-card-desc { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .txn-card-meta { font-size: 11px; color: var(--text2); }
+  .txn-card-amount { font-size: 15px; font-weight: 700; flex-shrink: 0; }
+  .txn-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* ── Forms ── */
+  .form-stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--text2); font-weight: 600; letter-spacing: 0.02em; }
+  .form-group input, .form-group select {
+    font-size: 15px; padding: 11px 12px; border: 1px solid var(--border2);
+    border-radius: var(--radius); background: var(--bg2); color: var(--text);
+    font-family: var(--font); outline: none; transition: border 0.15s;
+    -webkit-appearance: none; appearance: none; width: 100%;
+  }
+  .form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a9a96' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--blue); background: var(--bg); }
+
+  /* ── Buttons ── */
+  .btn { padding: 10px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text); font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); transition: all 0.15s; }
+  .btn:active { opacity: 0.75; transform: scale(0.98); }
+  .btn-primary { background: var(--text); color: var(--bg); border-color: transparent; }
+  .btn-block { width: 100%; justify-content: center; padding: 13px; font-size: 15px; font-weight: 600; }
+  .btn-sm { padding: 6px 10px; font-size: 11px; border-radius: 7px; }
+  .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 8px; }
+  .btn-danger { background: var(--red-bg); color: var(--red-text); border-color: transparent; }
+
+  /* ── Badges ── */
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-success { background: var(--green-bg); color: var(--green-text); }
+  .badge-warning { background: var(--amber-bg); color: var(--amber-text); }
+  .badge-danger { background: var(--red-bg); color: var(--red-text); }
+  .badge-info { background: var(--blue-bg); color: var(--blue-text); }
+
+  /* ── P&L rows ── */
+  .pl-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .pl-row.total { font-weight: 700; border-bottom: none; border-top: 1px solid var(--border2); padding-top: 10px; margin-top: 4px; font-size: 14px; }
+  .pl-row.sub { padding-left: 16px; color: var(--text2); font-size: 12px; }
+
+  /* ── Misc ── */
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .empty { text-align: center; padding: 2rem 1rem; color: var(--text2); font-size: 13px; }
+  .bill-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 10px; font-size: 11px; background: var(--blue-bg); color: var(--blue-text); cursor: pointer; border: none; font-family: var(--font); }
+  .attach-label { display: inline-flex; align-items: center; gap: 5px; padding: 11px 12px; border-radius: var(--radius); border: 1px dashed var(--border2); font-size: 13px; color: var(--text2); cursor: pointer; width: 100%; transition: all 0.15s; background: var(--bg2); }
+  .attach-label:hover { border-color: var(--blue); color: var(--blue); }
+  .divider { height: 0.5px; background: var(--border); margin: 12px 0; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 14px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── Modals ── */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; padding: 0; }
+  @media (min-width: 500px) { .modal-backdrop { align-items: center; padding: 20px; } }
+  .modal {
+    background: var(--bg); border: 0.5px solid var(--border2); padding: 24px;
+    width: 100%; max-width: 440px; box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 90vh; overflow-y: auto;
+  }
+  @media (min-width: 500px) { .modal { border-radius: var(--radius-lg); } }
+  .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 18px; flex-direction: column; }
+  .modal-actions-row { display: flex; gap: 8px; }
+
+  /* ── Sync bar ── */
+  .sync-bar { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); padding: 6px 0; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .sync-dot.syncing { background: #F5A623; animation: pulse 1s infinite; }
+  .sync-dot.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Login ── */
+  #loginScreen { position: fixed; inset: 0; background: var(--bg3); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-box { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 36px 28px; width: 100%; max-width: 380px; box-shadow: 0 8px 40px rgba(0,0,0,0.10); }
+  .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+  .login-logo span { font-size: 22px; font-weight: 800; color: var(--text); }
+  .login-box h2 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .login-box p { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+  .login-box .form-group { margin-bottom: 14px; }
+  .login-btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; border-radius: var(--radius); border: none; background: var(--text); color: var(--bg); cursor: pointer; font-family: var(--font); margin-top: 6px; transition: opacity 0.15s; }
+  .login-btn:active { opacity: 0.8; }
+  .login-error { font-size: 12px; color: var(--red-text); background: var(--red-bg); border-radius: var(--radius); padding: 10px 14px; margin-top: 12px; display: none; }
+  .login-error.show { display: block; }
+  .login-footer { font-size: 11px; color: var(--text3); text-align: center; margin-top: 20px; }
+  .logout-btn { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; font-family: var(--font); }
+  .logout-btn:active { background: var(--red-bg); color: var(--red-text); }
+
+  /* ── Chart ── */
+  .chart-container { display: flex; gap: 14px; align-items: flex-end; height: 130px; padding-top: 10px; overflow-x: auto; }
+  .chart-bar-group { flex: 1; min-width: 50px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 110px; }
+  .chart-bar { width: 22px; border-radius: 4px 4px 0 0; cursor: pointer; transition: opacity 0.15s; }
+  .chart-bar:hover { opacity: 0.7; }
+  .chart-label { font-size: 10px; color: var(--text2); text-align: center; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── Download dropdown ── */
+  .download-menu { position: relative; display: inline-block; }
+  .download-dropdown { position: absolute; right: 0; top: calc(100% + 6px); background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius); min-width: 190px; box-shadow: 0 4px 20px rgba(0,0,0,0.14); z-index: 300; display: none; }
+  .download-dropdown.open { display: block; }
+  .download-dropdown button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 16px; border: none; background: transparent; color: var(--text); font-size: 13px; cursor: pointer; font-family: var(--font); text-align: left; }
+  .download-dropdown button:hover { background: var(--bg2); }
+
+  /* ── Filter bar ── */
+  .filter-section { background: var(--bg2); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
+  .filter-section .form-row-2 { gap: 8px; }
+  .filter-section input, .filter-section select { font-size: 13px; padding: 9px 10px; }
+
+  /* ── Two col on wider screens ── */
+  @media (min-width: 620px) {
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  }
+
+  /* ── Mobile: show card list for transactions ── */
+  @media (max-width: 540px) {
+    .table-responsive-hide { display: none !important; }
+    .txn-cards { display: block; }
+    .metric .value { font-size: 17px; }
+    .page-header h1 { font-size: 16px; }
+    .metric-grid { gap: 6px; }
+  }
+
+  /* ── Invoice cards on mobile ── */
+  .inv-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; }
+  .inv-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .inv-card-client { font-size: 14px; font-weight: 600; }
+  .inv-card-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .inv-card-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+  /* Cloud sync info box */
+  .sync-info { background: var(--blue-bg); border: 0.5px solid var(--blue); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--blue-text); display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+
+  /* FAB for adding */
+  .fab { position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 14px); right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--blue); color: #fff; border: none; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(55,138,221,0.4); z-index: 150; transition: transform 0.15s; }
+  .fab:active { transform: scale(0.93); }
+  .fab.hidden { display: none; }
+
+  /* Section fade-in */
+  #content > * { animation: fadeUp 0.2s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <i class="ti ti-building-bank" style="font-size:28px;color:var(--blue)"></i>
+      <span>WateenSync</span>
+    </div>
+    <h2>Admin Login</h2>
+    <p>Enter your credentials to access the dashboard.</p>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()"><i class="ti ti-lock-open" style="margin-right:6px"></i>Sign In</button>
+    <div class="login-error" id="loginError">Incorrect username or password.</div>
+    <div class="login-footer">WateenSync &mdash; Admin Access Only</div>
+  </div>
+</div>
+
+<div id="appWrapper">
+  <div class="page-header">
+    <h1>
+      <i class="ti ti-building-bank" style="color:var(--blue);font-size:20px"></i>
+      WateenSync
+    </h1>
+    <div class="header-right">
+      <div class="sync-bar">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncLabel">Synced</span>
+      </div>
+      <div class="download-menu" id="dlMenu">
+        <button class="btn btn-sm" onclick="toggleDownloadMenu()" title="Export"><i class="ti ti-download"></i></button>
+        <div class="download-dropdown" id="dlDropdown">
+          <button onclick="downloadCSV('transactions')"><i class="ti ti-file-text"></i> Transactions CSV</button>
+          <button onclick="downloadCSV('invoices')"><i class="ti ti-file-text"></i> Invoices CSV</button>
+          <button onclick="downloadCSV('employees')"><i class="ti ti-file-text"></i> Payroll CSV</button>
+          <button onclick="downloadJSON()"><i class="ti ti-braces"></i> Full Data JSON</button>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+
+  <div class="wrapper">
+    <div id="content"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="active" onclick="setTab('dashboard')" id="nav-dashboard">
+      <i class="ti ti-layout-dashboard"></i>Dashboard
+    </button>
+    <button onclick="setTab('income')" id="nav-income">
+      <i class="ti ti-arrows-exchange"></i>Cashflow
+    </button>
+    <button onclick="setTab('pl')" id="nav-pl">
+      <i class="ti ti-report-analytics"></i>P&amp;L
+    </button>
+    <button onclick="setTab('invoices')" id="nav-invoices">
+      <i class="ti ti-file-invoice"></i>Invoices
+    </button>
+    <button onclick="setTab('payroll')" id="nav-payroll">
+      <i class="ti ti-users"></i>Payroll
+    </button>
+  </nav>
+</div>
+
+<button class="fab hidden" id="fabBtn" onclick="handleFab()"><i class="ti ti-plus"></i></button>
+
+<div class="toast" id="toast"></div>
+
+<div id="addBizModal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)closeAddBiz()">
+  <div class="modal">
+    <h2><i class="ti ti-building-plus"></i>Add Business</h2>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Business Name</label>
+      <input type="text" id="new-biz-name" placeholder="e.g. Delta Ventures">
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label>Currency</label>
+      <select id="new-biz-currency">
+        <option value="QAR">QAR — Qatari Riyal</option>
+        <option value="USD">USD — US Dollar</option>
+        <option value="EUR">EUR — Euro</option>
+        <option value="GBP">GBP — British Pound</option>
+        <option value="AED">AED — UAE Dirham</option>
+        <option value="SAR">SAR — Saudi Riyal</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" onclick="addBusiness()"><i class="ti ti-plus"></i> Add Business</button>
+      <button class="btn btn-block" onclick="closeAddBiz()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="editBizModal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)closeEditBiz()">
+  <div class="modal">
+    <h2><i class="ti ti-edit"></i>Edit Business</h2>
+    <input type="hidden" id="edit-biz-idx">
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Business Name</label>
+      <input type="text" id="edit-biz-name" placeholder="Business name">
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <label>Currency</label>
+      <select id="edit-biz-currency">
+        <option value="QAR">QAR</option><option value="USD">USD</option>
+        <option value="EUR">EUR</option><option value="GBP">GBP</option>
+        <option value="AED">AED</option><option value="SAR">SAR</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" onclick="saveBizEdit()"><i class="ti ti-check"></i> Save Changes</button>
+      <button class="btn btn-block" onclick="closeEditBiz()">Cancel</button>
+      <button class="btn btn-danger btn-block" onclick="confirmDeleteBiz()"><i class="ti ti-trash"></i> Delete Business</button>
+    </div>
+  </div>
+</div>
+
+<div id="billViewModal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)closeBillView()">
+  <div class="modal">
+    <h2><i class="ti ti-paperclip"></i>Attached Bill</h2>
+    <div id="billViewContent" style="text-align:center;margin:12px 0"></div>
+    <div class="modal-actions">
+      <a id="billDownloadLink" class="btn btn-primary btn-block" download><i class="ti ti-download"></i> Download</a>
+      <button class="btn btn-block" onclick="closeBillView()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="addTxnModal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)closeAddTxn()">
+  <div class="modal">
+    <h2><i class="ti ti-plus"></i>Add Transaction</h2>
+    <div class="form-stack">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="m-txn-type"><option value="income">Income</option><option value="expense">Expense</option></select>
+        </div>
+        <div class="form-group">
+          <label>Amount (QAR)</label>
+          <input type="number" id="m-txn-amount" placeholder="0" min="0" inputmode="decimal">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" id="m-txn-cat" placeholder="e.g. Sales">
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="m-txn-date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="m-txn-desc" placeholder="Description">
+      </div>
+      <div class="form-group">
+        <label>Attach Bill (optional)</label>
+        <label class="attach-label" for="m-txn-bill"><i class="ti ti-paperclip"></i> <span id="m-bill-label">Choose file…</span></label>
+        <input type="file" id="m-txn-bill" accept="image/*,application/pdf" style="display:none" onchange="updateMBillLabel(this)">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" onclick="addTxnFromModal()"><i class="ti ti-check"></i> Add Transaction</button>
+      <button class="btn btn-block" onclick="closeAddTxn()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="addInvModal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)closeAddInv()">
+  <div class="modal">
+    <h2><i class="ti ti-file-invoice"></i>New Invoice</h2>
+    <div class="form-stack">
+      <div class="form-group">
+        <label>Business</label>
+        <select id="m-inv-biz"></select>
+      </div>
+      <div class="form-group">
+        <label>Client Name</label>
+        <input type="text" id="m-inv-client" placeholder="Client name">
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Amount (QAR)</label>
+          <input type="number" id="m-inv-amount" placeholder="0" min="0" inputmode="decimal">
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="m-inv-due">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" onclick="addInvoiceFromModal()"><i class="ti ti-check"></i> Create Invoice</button>
+      <button class="btn btn-block" onclick="closeAddInv()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="addEmpModal" style="display:none" class="modal-backdrop" onclick="if(event.target===this)closeAddEmp()">
+  <div class="modal">
+    <h2><i class="ti ti-user-plus"></i>Add Employee</h2>
+    <div class="form-stack">
+      <div class="form-group">
+        <label>Business</label>
+        <select id="m-emp-biz"></select>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="m-emp-name" placeholder="Full name">
+        </div>
+        <div class="form-group">
+          <label>Job Title</label>
+          <input type="text" id="m-emp-role" placeholder="e.g. Manager">
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Department</label>
+          <input type="text" id="m-emp-dept" placeholder="e.g. Operations">
+        </div>
+        <div class="form-group">
+          <label>Monthly Salary</label>
+          <input type="number" id="m-emp-salary" placeholder="0" min="0" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-block" onclick="addEmployeeFromModal()"><i class="ti ti-check"></i> Add Employee</button>
+      <button class="btn btn-block" onclick="closeAddEmp()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Firebase Initialization ─────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCXLMNsw99fiEHr-43gsbzzAuzdDz8EJ6I",
+  authDomain: "wateen-b6973.firebaseapp.com",
+  projectId: "wateen-b6973",
+  storageBucket: "wateen-b6973.firebasestorage.app",
+  messagingSenderId: "823042272980",
+  appId: "1:823042272980:web:d2a83ca8dab043c3f75541"
+};
+
+// Initialize Firebase using compat mode
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── Constants ──────────────────────────────────────────────────────
+const BIZ_COLORS = ['#378ADD','#1D9E75','#D85A30','#9B59B6','#E67E22','#1ABC9C','#E74C3C','#2ECC71'];
+const AUTH_KEY    = 'wateen_auth_v2';
+const ADMIN_USER  = 'admin';
+const ADMIN_PASS  = 'wateen2024';
+
+let txnFilter = { type: 'all', dateFrom: '', dateTo: '' };
+let _syncTimer = null;
+let _syncStatus = 'idle'; // idle | syncing | synced | error
+
+// ── Cloud Storage Sync (Updated for Firestore) ──────────────────────
+async function cloudSave(data) {
+  setSyncStatus('syncing');
+  try {
+    // Saves to a collection called 'wateenApp' in a document called 'mainState'
+    await db.collection("wateenApp").doc("mainState").set(data);
+    setSyncStatus('synced');
+  } catch(e) {
+    console.error('Save error:', e);
+    setSyncStatus('error');
+  }
+}
+
+async function cloudLoad() {
+  setSyncStatus('syncing');
+  try {
+    const docRef = await db.collection("wateenApp").doc("mainState").get();
+    if (docRef.exists) {
+      setSyncStatus('synced');
+      return docRef.data();
+    } else {
+      setSyncStatus('synced');
+      return null; // No data exists yet
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+    setSyncStatus('error');
+    return null;
+  }
+}
+
+function setSyncStatus(status) {
+  _syncStatus = status;
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'sync-dot';
+  if (status === 'syncing') { dot.classList.add('syncing'); lbl.textContent = 'Syncing…'; }
+  else if (status === 'synced') { lbl.textContent = 'Synced'; }
+  else if (status === 'error') { dot.classList.add('error'); lbl.textContent = 'Offline'; }
+  else { lbl.textContent = ''; }
+}
+
+function debounceSave() {
+  clearTimeout(_syncTimer);
+  setSyncStatus('syncing');
+  _syncTimer = setTimeout(() => cloudSave(state), 800);
+}
+
+// ── Default data ──────────────────────────────────────────────────
+const defaultState = {
+  tab: 'dashboard', biz: 0,
+  businesses: [
+    { name: 'Apex Retail', currency: 'QAR' },
+    { name: 'Nova Services', currency: 'QAR' },
+    { name: 'Crest Tech', currency: 'QAR' }
+  ],
+  transactions: [
+    { biz:0, type:'income', cat:'Sales', desc:'Product Sales', amount:42000, date:'2026-04-01', month:'Apr' },
+    { biz:0, type:'income', cat:'Consulting', desc:'Advisory Fee', amount:8500, date:'2026-04-10', month:'Apr' },
+    { biz:0, type:'expense', cat:'Rent', desc:'Office Rent', amount:6000, date:'2026-04-05', month:'Apr' },
+    { biz:0, type:'expense', cat:'Utilities', desc:'Electricity', amount:1200, date:'2026-04-07', month:'Apr' },
+    { biz:0, type:'expense', cat:'Supplies', desc:'Office Supplies', amount:900, date:'2026-04-15', month:'Apr' },
+    { biz:1, type:'income', cat:'Services', desc:'Cleaning Contract', amount:22000, date:'2026-04-01', month:'Apr' },
+    { biz:1, type:'income', cat:'Services', desc:'Maintenance Contract', amount:9000, date:'2026-04-12', month:'Apr' },
+    { biz:1, type:'expense', cat:'Labor', desc:'Staff Wages', amount:14000, date:'2026-04-28', month:'Apr' },
+    { biz:2, type:'income', cat:'SaaS', desc:'Subscription Revenue', amount:55000, date:'2026-04-01', month:'Apr' },
+    { biz:2, type:'income', cat:'SaaS', desc:'One-time Setup', amount:12000, date:'2026-04-08', month:'Apr' },
+    { biz:2, type:'expense', cat:'Infrastructure', desc:'Cloud Hosting', amount:8000, date:'2026-04-03', month:'Apr' },
+    { biz:2, type:'expense', cat:'Salaries', desc:'Dev Team', amount:28000, date:'2026-04-30', month:'Apr' },
+  ],
+  invoices: [
+    { biz:0, client:'Alpha Trading', amount:15000, date:'2026-04-05', due:'2026-05-05', status:'paid', inv:'INV-001' },
+    { biz:0, client:'Beta Corp', amount:8500, date:'2026-04-15', due:'2026-05-15', status:'pending', inv:'INV-002' },
+    { biz:0, client:'Gamma LLC', amount:4200, date:'2026-03-20', due:'2026-04-20', status:'overdue', inv:'INV-003' },
+    { biz:1, client:'City Hall', amount:22000, date:'2026-04-01', due:'2026-04-30', status:'paid', inv:'INV-004' },
+    { biz:1, client:'Plaza Hotel', amount:9000, date:'2026-04-12', due:'2026-05-12', status:'pending', inv:'INV-005' },
+    { biz:2, client:'FinTech Co', amount:55000, date:'2026-04-01', due:'2026-04-30', status:'paid', inv:'INV-006' },
+    { biz:2, client:'StartupX', amount:12000, date:'2026-04-08', due:'2026-05-08', status:'pending', inv:'INV-007' },
+  ],
+  employees: [
+    { biz:0, name:'Sara Al-Mansouri', role:'Store Manager', salary:12000, dept:'Operations', status:'active' },
+    { biz:0, name:'Khalid Hassan', role:'Sales Associate', salary:6500, dept:'Sales', status:'active' },
+    { biz:1, name:'Tariq Nasser', role:'Supervisor', salary:9000, dept:'Operations', status:'active' },
+    { biz:1, name:'Fatima Qasim', role:'Cleaner', salary:4500, dept:'Operations', status:'active' },
+    { biz:2, name:'Nour El-Din', role:'Lead Developer', salary:18000, dept:'Engineering', status:'active' },
+    { biz:2, name:'Leila Farouk', role:'Product Manager', salary:16000, dept:'Product', status:'active' },
+  ]
+};
+
+let state = JSON.parse(JSON.stringify(defaultState));
+
+// ── Boot ──────────────────────────────────────────────────────────
+async function boot() {
+  if (!checkAuth()) {
+    document.getElementById('loginScreen').style.display = 'flex';
+    setTimeout(() => document.getElementById('login-user').focus(), 100);
+    return;
+  }
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appWrapper').style.display = 'block';
+
+  // Load from cloud
+  const saved = await cloudLoad();
+  if (saved) {
+    state = saved;
+  }
+  state.tab = state.tab || 'dashboard';
+  state.biz = state.biz || 0;
+  render();
+}
+
+boot();
+
+// ── Auth ──────────────────────────────────────────────────────────
+function checkAuth() { return sessionStorage.getItem(AUTH_KEY) === 'true'; }
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  const err = document.getElementById('loginError');
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    sessionStorage.setItem(AUTH_KEY, 'true');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appWrapper').style.display = 'block';
+    err.classList.remove('show');
+    cloudLoad().then(saved => {
+      if (saved) { state = saved; state.tab = state.tab||'dashboard'; state.biz = state.biz||0; }
+      render();
+    });
+  } else {
+    err.classList.add('show');
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem(AUTH_KEY);
+  document.getElementById('appWrapper').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('loginError').classList.remove('show');
+}
+
+// ── State helpers ─────────────────────────────────────────────────
+function saveState() { debounceSave(); }
+function setTab(t) { state.tab = t; saveState(); render(); }
+function setBiz(b) { state.biz = b; txnFilter = { type:'all', dateFrom:'', dateTo:'' }; saveState(); render(); }
+
+function fmt(n) {
+  const c = (state.businesses[state.biz < 0 ? 0 : state.biz] || state.businesses[0]).currency || 'QAR';
+  return c + ' ' + Math.round(n).toLocaleString();
+}
+function fmtShort(n, biz) {
+  const c = ((biz !== undefined ? state.businesses[biz] : null) || state.businesses[0] || {}).currency || 'QAR';
+  const sp = ' ';
+  if (n >= 1000000) return c + sp + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return c + sp + (n/1000).toFixed(0) + 'K';
+  return c + sp + Math.round(n).toLocaleString();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function calcBiz(bizIdx, month) {
+  let txns = state.transactions.filter(t => t.biz === bizIdx && (!month || t.month === month));
+  let income = txns.filter(t => t.type==='income').reduce((s,t) => s+t.amount, 0);
+  let expense = txns.filter(t => t.type==='expense').reduce((s,t) => s+t.amount, 0);
+  return { income, expense, profit: income - expense };
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function render() {
+  // Update nav
+  ['dashboard','income','pl','invoices','payroll'].forEach(tab => {
+    const btn = document.getElementById('nav-' + tab);
+    if (btn) btn.className = state.tab === tab ? 'active' : '';
+  });
+
+  // FAB visibility
+  const fab = document.getElementById('fabBtn');
+  if (['income','invoices','payroll'].includes(state.tab)) {
+    fab.className = 'fab';
+  } else {
+    fab.className = 'fab hidden';
+  }
+
+  const el = document.getElementById('content');
+  if (state.tab === 'dashboard') el.innerHTML = renderDashboard();
+  else if (state.tab === 'income') el.innerHTML = renderIncome();
+  else if (state.tab === 'pl') el.innerHTML = renderPL();
+  else if (state.tab === 'invoices') el.innerHTML = renderInvoices();
+  else if (state.tab === 'payroll') el.innerHTML = renderPayroll();
+}
+
+function handleFab() {
+  if (state.tab === 'income') openAddTxn();
+  else if (state.tab === 'invoices') openAddInv();
+  else if (state.tab === 'payroll') openAddEmp();
+}
+
+// ── Business tabs ─────────────────────────────────────────────────
+function bizTabs(withAll) {
+  let html = '<div class="biz-scroll"><div class="biz-tabs">';
+  if (withAll) html += `<button class="biz-tab ${state.biz===-1?'active':''}" onclick="setBiz(-1)">All businesses</button>`;
+  state.businesses.forEach((b,i) => {
+    html += `<div class="biz-tab-wrap">
+      <button class="biz-tab ${state.biz===i?'active':''}" onclick="setBiz(${i})">
+        <span class="dot" style="background:${BIZ_COLORS[i]}"></span>${b.name}
+      </button>
+      <button class="biz-tab-edit" onclick="openEditBiz(${i})" title="Edit"><i class="ti ti-pencil"></i></button>
+    </div>`;
+  });
+  html += `<button class="biz-tab" onclick="openAddBiz()" style="border-style:dashed;color:var(--text3)"><i class="ti ti-plus" style="font-size:11px"></i> Add</button>`;
+  return html + '</div></div>';
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────
+function renderDashboard() {
+  const totals = state.businesses.map((_,i) => calcBiz(i,'Apr'));
+  const grandIncome = totals.reduce((s,t) => s+t.income, 0);
+  const grandExpense = totals.reduce((s,t) => s+t.expense, 0);
+  const grandProfit = grandIncome - grandExpense;
+  const margin = grandIncome ? ((grandProfit/grandIncome)*100).toFixed(1) : 0;
+  const c = state.businesses[0].currency || 'QAR';
+
+  let html = `<div class="metric-grid">
+    <div class="metric"><div class="label">Revenue (Apr)</div><div class="value">${fmtShort(grandIncome,0)}</div></div>
+    <div class="metric"><div class="label">Expenses (Apr)</div><div class="value neg">${fmtShort(grandExpense,0)}</div></div>
+    <div class="metric"><div class="label">Net Profit</div><div class="value ${grandProfit>=0?'pos':'neg'}">${fmtShort(grandProfit,0)}</div></div>
+    <div class="metric"><div class="label">Net Margin</div><div class="value">${margin}%</div></div>
+  </div>`;
+
+  // Chart
+  html += `<div class="card">
+    <div class="section-title"><i class="ti ti-chart-bar"></i> Revenue vs Expenses — Apr</div>
+    <div class="chart-container">`;
+  const maxVal = Math.max(...totals.flatMap(t => [t.income, t.expense]), 1);
+  totals.forEach((t,i) => {
+    const ih = Math.round((t.income/maxVal)*100);
+    const eh = Math.round((t.expense/maxVal)*100);
+    html += `<div class="chart-bar-group">
+      <div class="chart-bars">
+        <div class="chart-bar" title="Revenue: ${fmtShort(t.income,i)}" style="height:${ih}px;background:${BIZ_COLORS[i]};opacity:0.9"></div>
+        <div class="chart-bar" title="Expenses: ${fmtShort(t.expense,i)}" style="height:${eh}px;background:${BIZ_COLORS[i]};opacity:0.35"></div>
+      </div>
+      <div class="chart-label">${state.businesses[i].name}</div>
+    </div>`;
+  });
+  html += `</div>
+    <div style="display:flex;gap:14px;margin-top:8px;font-size:11px;color:var(--text2)">
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#888;opacity:0.9;margin-right:4px"></span>Revenue</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:#888;opacity:0.35;margin-right:4px"></span>Expenses</span>
+    </div>
+  </div>`;
+
+  // Biz performance
+  html += `<div class="card"><div class="section-title"><i class="ti ti-building-store"></i> Business Performance</div>`;
+  totals.forEach((t,i) => {
+    const m = t.income ? ((t.profit/t.income)*100).toFixed(0)+'%' : '0%';
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot" style="background:${BIZ_COLORS[i]};width:10px;height:10px"></span>
+        <div>
+          <div style="font-size:13px;font-weight:500">${state.businesses[i].name}</div>
+          <div style="font-size:11px;color:var(--text2)">Revenue ${fmtShort(t.income,i)}</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:600" class="${t.profit>=0?'pos':'neg'}">${fmtShort(t.profit,i)}</div>
+        <div style="font-size:11px;color:var(--text2)">${m} margin</div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Invoice summary
+  const invPending = state.invoices.filter(i=>i.status==='pending').reduce((s,i)=>s+i.amount,0);
+  const invOverdue = state.invoices.filter(i=>i.status==='overdue').reduce((s,i)=>s+i.amount,0);
+  const invPaid = state.invoices.filter(i=>i.status==='paid').reduce((s,i)=>s+i.amount,0);
+
+  html += `<div class="two-col">
+    <div class="card"><div class="section-title"><i class="ti ti-file-invoice"></i> Invoices</div>
+      <div class="pl-row"><span>Paid</span><span class="pos">${fmtShort(invPaid,0)}</span></div>
+      <div class="pl-row"><span>Pending</span><span style="color:#BA7517">${fmtShort(invPending,0)}</span></div>
+      <div class="pl-row" style="border:none"><span>Overdue</span><span class="neg">${fmtShort(invOverdue,0)}</span></div>
+    </div>
+    <div class="card"><div class="section-title"><i class="ti ti-users"></i> Payroll</div>
+      <div class="pl-row"><span>Employees</span><span>${state.employees.length}</span></div>
+      <div class="pl-row"><span>Monthly</span><span>${fmtShort(state.employees.reduce((s,e)=>s+e.salary,0),0)}</span></div>
+      <div class="pl-row" style="border:none"><span>Annual</span><span>${fmtShort(state.employees.reduce((s,e)=>s+e.salary,0)*12,0)}</span></div>
+    </div>
+  </div>`;
+
+  return html;
+}
+
+// ── Income & Expenses ─────────────────────────────────────────────
+function applyTxnFilter() {
+  txnFilter.type = document.getElementById('filter-type')?.value || 'all';
+  txnFilter.dateFrom = document.getElementById('filter-from')?.value || '';
+  txnFilter.dateTo = document.getElementById('filter-to')?.value || '';
+  render();
+}
+function clearTxnFilter() { txnFilter = { type:'all', dateFrom:'', dateTo:'' }; render(); }
+
+function renderIncome() {
+  let html = bizTabs(false);
+  const b = state.biz < 0 ? 0 : state.biz;
+  const allTxns = state.transactions.filter(t => t.biz === b);
+  const income = allTxns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = allTxns.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+
+  html += `<div class="metric-grid">
+    <div class="metric"><div class="label">Income</div><div class="value pos">${fmtShort(income,b)}</div></div>
+    <div class="metric"><div class="label">Expenses</div><div class="value neg">${fmtShort(expense,b)}</div></div>
+    <div class="metric"><div class="label">Net Balance</div><div class="value ${income-expense>=0?'pos':'neg'}">${fmtShort(income-expense,b)}</div></div>
+    <div class="metric"><div class="label">Transactions</div><div class="value">${allTxns.length}</div></div>
+  </div>`;
+
+  // Filter
+  html += `<div class="filter-section">
+    <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em"><i class="ti ti-filter" style="margin-right:4px"></i>Filter</div>
+    <div class="form-row-2" style="gap:8px">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="filter-type" onchange="applyTxnFilter()">
+          <option value="all" ${txnFilter.type==='all'?'selected':''}>All</option>
+          <option value="income" ${txnFilter.type==='income'?'selected':''}>Income</option>
+          <option value="expense" ${txnFilter.type==='expense'?'selected':''}>Expense</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>From</label>
+        <input type="date" id="filter-from" value="${txnFilter.dateFrom}" onchange="applyTxnFilter()">
+      </div>
+    </div>
+    <div class="form-row-2" style="gap:8px;margin-top:8px">
+      <div class="form-group">
+        <label>To</label>
+        <input type="date" id="filter-to" value="${txnFilter.dateTo}" onchange="applyTxnFilter()">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn" style="width:100%;justify-content:center" onclick="clearTxnFilter()"><i class="ti ti-x"></i> Clear</button>
+      </div>
+    </div>
+  </div>`;
+
+  let txns = allTxns;
+  if (txnFilter.type !== 'all') txns = txns.filter(t => t.type === txnFilter.type);
+  if (txnFilter.dateFrom) txns = txns.filter(t => t.date >= txnFilter.dateFrom);
+  if (txnFilter.dateTo) txns = txns.filter(t => t.date <= txnFilter.dateTo);
+  txns = txns.slice().sort((a,z) => z.date.localeCompare(a.date));
+
+  html += `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-title" style="margin:0"><i class="ti ti-list"></i> Transactions <span style="font-size:11px;font-weight:400;color:var(--text2)">(${txns.length})</span></div>
+    </div>`;
+
+  // Mobile card view
+  html += `<div class="txn-cards">`;
+  if (!txns.length) {
+    html += `<div class="empty">No transactions yet. Tap + to add one.</div>`;
+  } else {
+    txns.forEach(t => {
+      const idx = state.transactions.indexOf(t);
+      html += `<div class="txn-card">
+        <div class="txn-card-left">
+          <div class="txn-card-top">
+            <span class="badge ${t.type==='income'?'badge-success':'badge-danger'}" style="font-size:10px">${t.type}</span>
+            <span class="txn-card-desc">${t.desc}</span>
+          </div>
+          <div class="txn-card-meta">${t.cat} &nbsp;·&nbsp; ${t.date}${t.bill?` &nbsp;·&nbsp; <button class="bill-chip" onclick="viewBill(${idx})"><i class="ti ti-file"></i> Bill</button>`:''}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="txn-card-amount ${t.type==='income'?'pos':'neg'}">${t.type==='income'?'+':'-'}${fmtShort(t.amount,t.biz)}</span>
+          <button class="btn btn-sm btn-danger" onclick="deleteTxn(${idx})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // Desktop table view
+  html += `<div class="table-wrap table-responsive-hide"><table>
+    <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Bill</th><th></th></tr></thead>
+    <tbody>`;
+  if (!txns.length) {
+    html += `<tr><td colspan="7" class="empty">No transactions yet. Tap + to add.</td></tr>`;
+  } else {
+    txns.forEach(t => {
+      const idx = state.transactions.indexOf(t);
+      const billBtn = t.bill
+        ? `<button class="bill-chip" onclick="viewBill(${idx})"><i class="ti ti-file"></i> View</button>`
+        : `<span style="color:var(--text3)">—</span>`;
+      html += `<tr>
+        <td>${t.date}</td>
+        <td><span class="badge ${t.type==='income'?'badge-success':'badge-danger'}">${t.type}</span></td>
+        <td>${t.cat}</td><td>${t.desc}</td>
+        <td class="${t.type==='income'?'pos':'neg'}" style="font-weight:600">${t.type==='income'?'+':'-'}${fmt(t.amount)}</td>
+        <td>${billBtn}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteTxn(${idx})"><i class="ti ti-trash"></i></button></td>
+      </tr>`;
+    });
+  }
+  html += `</tbody></table></div></div>`;
+  return html;
+}
+
+// ── P&L ───────────────────────────────────────────────────────────
+function renderPL() {
+  let html = bizTabs(false);
+  const b = state.biz < 0 ? 0 : state.biz;
+  const allMonths = [...new Set(state.transactions.filter(t=>t.biz===b).map(t=>t.month))];
+  if (!allMonths.length) return html + `<div class="card"><div class="empty">No data yet. Add transactions first.</div></div>`;
+
+  allMonths.forEach(month => {
+    const txns = state.transactions.filter(t => t.biz===b && t.month===month);
+    const income = txns.filter(t=>t.type==='income');
+    const expense = txns.filter(t=>t.type==='expense');
+    const totalIn = income.reduce((s,t)=>s+t.amount,0);
+    const totalEx = expense.reduce((s,t)=>s+t.amount,0);
+    const profit = totalIn - totalEx;
+    const incomeByCat = {}; income.forEach(t => { incomeByCat[t.cat] = (incomeByCat[t.cat]||0)+t.amount; });
+    const expByCat = {}; expense.forEach(t => { expByCat[t.cat] = (expByCat[t.cat]||0)+t.amount; });
+
+    html += `<div class="card">
+      <div class="section-title"><i class="ti ti-report-analytics"></i> ${month} 2026 — ${state.businesses[b].name}</div>
+      <div class="pl-row" style="font-weight:700"><span>Revenue</span><span class="pos">${fmt(totalIn)}</span></div>`;
+    Object.entries(incomeByCat).forEach(([k,v]) => html += `<div class="pl-row sub"><span>${k}</span><span>${fmt(v)}</span></div>`);
+    html += `<div class="pl-row" style="font-weight:700;margin-top:6px"><span>Operating Expenses</span><span class="neg">(${fmt(totalEx)})</span></div>`;
+    Object.entries(expByCat).forEach(([k,v]) => html += `<div class="pl-row sub"><span>${k}</span><span>(${fmt(v)})</span></div>`);
+    html += `<div class="pl-row total"><span>Net Profit / (Loss)</span><span class="${profit>=0?'pos':'neg'}">${profit<0?'(':''}${fmt(Math.abs(profit))}${profit<0?')':''}</span></div>`;
+    if (totalIn) html += `<div style="font-size:12px;color:var(--text2);padding-top:8px">Net margin: ${((profit/totalIn)*100).toFixed(1)}% &nbsp;·&nbsp; Expense ratio: ${((totalEx/totalIn)*100).toFixed(1)}%</div>`;
+    html += `</div>`;
+  });
+  return html;
+}
+
+// ── Invoices ──────────────────────────────────────────────────────
+function renderInvoices() {
+  let html = bizTabs(true);
+  const filtered = state.biz === -1 ? state.invoices : state.invoices.filter(i=>i.biz===state.biz);
+  const sorted = filtered.slice().reverse();
+
+  html += `<div class="card">
+    <div class="section-title"><i class="ti ti-file-invoice"></i> Invoices (${filtered.length})</div>`;
+
+  // Mobile card view
+  html += `<div class="txn-cards">`;
+  if (!sorted.length) {
+    html += `<div class="empty">No invoices yet. Tap + to create one.</div>`;
+  } else {
+    sorted.forEach(inv => {
+      const idx = state.invoices.indexOf(inv);
+      const statusBadge = inv.status==='paid' ? 'badge-success' : inv.status==='overdue' ? 'badge-danger' : 'badge-warning';
+      html += `<div class="inv-card">
+        <div class="inv-card-header">
+          <span class="inv-card-client">${inv.client}</span>
+          <span class="badge ${statusBadge}">${inv.status}</span>
+        </div>
+        <div class="inv-card-row"><span style="font-family:monospace;font-size:11px">${inv.inv}</span><span><span class="dot" style="background:${BIZ_COLORS[inv.biz]};margin-right:4px"></span>${state.businesses[inv.biz].name}</span></div>
+        <div class="inv-card-row"><span>Amount</span><span style="font-weight:600">${fmt(inv.amount)}</span></div>
+        <div class="inv-card-row"><span>Due</span><span>${inv.due}</span></div>
+        <div class="inv-card-actions">
+          ${inv.status!=='paid'?`<button class="btn btn-sm" style="flex:1;justify-content:center;color:var(--green-text);border-color:var(--green)" onclick="markPaid(${idx})"><i class="ti ti-check"></i> Mark Paid</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="deleteInvoice(${idx})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // Desktop table
+  html += `<div class="table-wrap table-responsive-hide"><table>
+    <thead><tr><th>Invoice#</th><th>Business</th><th>Client</th><th>Amount</th><th>Issue</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>`;
+  if (!sorted.length) {
+    html += `<tr><td colspan="8" class="empty">No invoices yet.</td></tr>`;
+  } else {
+    sorted.forEach(inv => {
+      const idx = state.invoices.indexOf(inv);
+      const statusBadge = inv.status==='paid' ? 'badge-success' : inv.status==='overdue' ? 'badge-danger' : 'badge-warning';
+      html += `<tr>
+        <td style="font-family:monospace;font-size:12px">${inv.inv}</td>
+        <td><span class="dot" style="background:${BIZ_COLORS[inv.biz]};margin-right:5px"></span>${state.businesses[inv.biz].name}</td>
+        <td>${inv.client}</td>
+        <td style="font-weight:600">${fmt(inv.amount)}</td>
+        <td>${inv.date}</td><td>${inv.due}</td>
+        <td><span class="badge ${statusBadge}">${inv.status}</span></td>
+        <td style="display:flex;gap:4px">
+          ${inv.status!=='paid'?`<button class="btn btn-sm" onclick="markPaid(${idx})"><i class="ti ti-check"></i> Paid</button>`:''}
+          <button class="btn btn-sm btn-danger" onclick="deleteInvoice(${idx})"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`;
+    });
+  }
+  html += `</tbody></table></div></div>`;
+  return html;
+}
+
+// ── Payroll ───────────────────────────────────────────────────────
+function renderPayroll() {
+  let html = bizTabs(true);
+  const filtered = state.biz === -1 ? state.employees : state.employees.filter(e=>e.biz===state.biz);
+  const activeEmps = filtered.filter(e=>e.status==='active');
+  const inactiveEmps = filtered.filter(e=>e.status==='inactive');
+  const activePayroll = activeEmps.reduce((s,e)=>s+e.salary,0);
+  const statusFilter = window._empStatusFilter || 'all';
+  const displayList = statusFilter==='active' ? activeEmps : statusFilter==='inactive' ? inactiveEmps : filtered;
+
+  html += `<div class="metric-grid">
+    <div class="metric"><div class="label">Active</div><div class="value">${activeEmps.length}</div><div class="sub pos">on payroll</div></div>
+    <div class="metric"><div class="label">Inactive</div><div class="value" style="color:var(--text2)">${inactiveEmps.length}</div></div>
+    <div class="metric"><div class="label">Monthly</div><div class="value">${fmtShort(activePayroll,0)}</div></div>
+    <div class="metric"><div class="label">Annual</div><div class="value">${fmtShort(activePayroll*12,0)}</div></div>
+  </div>`;
+
+  html += `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-title" style="margin:0"><i class="ti ti-users"></i> Employees</div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-sm ${statusFilter==='all'?'btn-primary':''}" onclick="setEmpFilter('all')">All</button>
+        <button class="btn btn-sm ${statusFilter==='active'?'btn-primary':''}" onclick="setEmpFilter('active')" style="${statusFilter==='active'?'':'color:var(--green-text);border-color:var(--green)'}">Active</button>
+        <button class="btn btn-sm ${statusFilter==='inactive'?'btn-primary':''}" onclick="setEmpFilter('inactive')">Off</button>
+      </div>
+    </div>`;
+
+  // Mobile card list
+  html += `<div class="txn-cards">`;
+  if (!displayList.length) {
+    html += `<div class="empty">No employees found. Tap + to add one.</div>`;
+  } else {
+    displayList.forEach(e => {
+      const idx = state.employees.indexOf(e);
+      const isActive = e.status === 'active';
+      html += `<div class="inv-card" style="${isActive?'':'opacity:0.55'}">
+        <div class="inv-card-header">
+          <span class="inv-card-client">${e.name}</span>
+          <button onclick="toggleEmployeeStatus(${idx})" class="badge ${isActive?'badge-success':'badge-warning'}" style="border:none;cursor:pointer;font-family:var(--font)">
+            ${isActive?'Active':'Inactive'}
+          </button>
+        </div>
+        <div class="inv-card-row"><span>${e.role}</span><span><span class="dot" style="background:${BIZ_COLORS[e.biz]};margin-right:4px"></span>${state.businesses[e.biz].name}</span></div>
+        <div class="inv-card-row"><span>${e.dept}</span><span style="font-weight:600">${isActive?fmt(e.salary):'—'}</span></div>
+        <div class="inv-card-actions">
+          <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="deleteEmployee(${idx})"><i class="ti ti-trash"></i> Remove</button>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  // Desktop table
+  html += `<div class="table-wrap table-responsive-hide"><table>
+    <thead><tr><th>Name</th><th>Business</th><th>Role</th><th>Dept</th><th>Monthly</th><th>Annual</th><th>Status</th><th></th></tr></thead><tbody>`;
+  if (!displayList.length) {
+    html += `<tr><td colspan="8" class="empty">No employees found.</td></tr>`;
+  } else {
+    displayList.forEach(e => {
+      const idx = state.employees.indexOf(e);
+      const isActive = e.status==='active';
+      html += `<tr style="${isActive?'':'opacity:0.55'}">
+        <td style="font-weight:500">${e.name}</td>
+        <td><span class="dot" style="background:${BIZ_COLORS[e.biz]};margin-right:5px"></span>${state.businesses[e.biz].name}</td>
+        <td>${e.role}</td><td>${e.dept}</td>
+        <td>${isActive?fmt(e.salary):'—'}</td>
+        <td>${isActive?fmt(e.salary*12):'—'}</td>
+        <td><button onclick="toggleEmployeeStatus(${idx})" class="badge ${isActive?'badge-success':'badge-warning'}" style="border:none;cursor:pointer;font-family:var(--font)">${isActive?'Active':'Inactive'}</button></td>
+        <td><button class="btn btn-sm btn-danger" onclick="deleteEmployee(${idx})"><i class="ti ti-trash"></i></button></td>
+      </tr>`;
+    });
+  }
+  html += `</tbody></table></div></div>`;
+  return html;
+}
+
+// ── Transaction CRUD ──────────────────────────────────────────────
+function openAddTxn() {
+  const modal = document.getElementById('addTxnModal');
+  document.getElementById('m-txn-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('m-txn-cat').value = '';
+  document.getElementById('m-txn-desc').value = '';
+  document.getElementById('m-txn-amount').value = '';
+  document.getElementById('m-bill-label').textContent = 'Choose file…';
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('m-txn-cat').focus(), 100);
+}
+function closeAddTxn() { document.getElementById('addTxnModal').style.display = 'none'; }
+function updateMBillLabel(input) {
+  const lbl = document.getElementById('m-bill-label');
+  lbl.textContent = input.files?.[0]?.name || 'Choose file…';
+}
+function addTxnFromModal() {
+  const type = document.getElementById('m-txn-type')?.value;
+  const cat = document.getElementById('m-txn-cat')?.value?.trim();
+  const desc = document.getElementById('m-txn-desc')?.value?.trim();
+  const amount = parseFloat(document.getElementById('m-txn-amount')?.value);
+  const date = document.getElementById('m-txn-date')?.value;
+  if (!cat || !desc || !amount || !date) { toast('Please fill all fields'); return; }
+  const b = state.biz < 0 ? 0 : state.biz;
+  const month = new Date(date).toLocaleString('en',{month:'short'});
+  const file = document.getElementById('m-txn-bill')?.files?.[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      state.transactions.push({ biz:b, type, cat, desc, amount, date, month, bill: e.target.result, billName: file.name });
+      saveState(); closeAddTxn(); render(); toast('Transaction added ✓');
+    };
+    reader.readAsDataURL(file);
+  } else {
+    state.transactions.push({ biz:b, type, cat, desc, amount, date, month });
+    saveState(); closeAddTxn(); render(); toast('Transaction added ✓');
+  }
+}
+function deleteTxn(idx) {
+  if (!confirm('Delete this transaction?')) return;
+  state.transactions.splice(idx, 1);
+  saveState(); render(); toast('Transaction deleted');
+}
+
+// ── Invoice CRUD ──────────────────────────────────────────────────
+function openAddInv() {
+  const sel = document.getElementById('m-inv-biz');
+  sel.innerHTML = state.businesses.map((b,i) => `<option value="${i}">${b.name}</option>`).join('');
+  if (state.biz >= 0) sel.value = state.biz;
+  document.getElementById('m-inv-client').value = '';
+  document.getElementById('m-inv-amount').value = '';
+  document.getElementById('m-inv-due').value = '';
+  document.getElementById('addInvModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('m-inv-client').focus(), 100);
+}
+function closeAddInv() { document.getElementById('addInvModal').style.display = 'none'; }
+function addInvoiceFromModal() {
+  const biz = parseInt(document.getElementById('m-inv-biz')?.value);
+  const client = document.getElementById('m-inv-client')?.value?.trim();
+  const amount = parseFloat(document.getElementById('m-inv-amount')?.value);
+  const due = document.getElementById('m-inv-due')?.value;
+  if (!client || !amount || !due) { toast('Please fill all fields'); return; }
+  const num = 'INV-' + String(state.invoices.length+1).padStart(3,'0');
+  const today = new Date().toISOString().split('T')[0];
+  state.invoices.push({ biz, client, amount, date:today, due, status:'pending', inv:num });
+  saveState(); closeAddInv(); render(); toast('Invoice created ✓');
+}
+function markPaid(idx) { state.invoices[idx].status = 'paid'; saveState(); render(); toast('Marked as paid ✓'); }
+function deleteInvoice(idx) {
+  if (!confirm('Delete this invoice?')) return;
+  state.invoices.splice(idx, 1); saveState(); render(); toast('Invoice deleted');
+}
+
+// ── Employee CRUD ─────────────────────────────────────────────────
+function openAddEmp() {
+  const sel = document.getElementById('m-emp-biz');
+  sel.innerHTML = state.businesses.map((b,i) => `<option value="${i}">${b.name}</option>`).join('');
+  if (state.biz >= 0) sel.value = state.biz;
+  ['m-emp-name','m-emp-role','m-emp-dept','m-emp-salary'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('addEmpModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('m-emp-name').focus(), 100);
+}
+function closeAddEmp() { document.getElementById('addEmpModal').style.display = 'none'; }
+function addEmployeeFromModal() {
+  const biz = parseInt(document.getElementById('m-emp-biz')?.value);
+  const name = document.getElementById('m-emp-name')?.value?.trim();
+  const role = document.getElementById('m-emp-role')?.value?.trim();
+  const dept = document.getElementById('m-emp-dept')?.value?.trim();
+  const salary = parseFloat(document.getElementById('m-emp-salary')?.value);
+  if (!name || !role || !dept || !salary) { toast('Please fill all fields'); return; }
+  state.employees.push({ biz, name, role, dept, salary, status:'active' });
+  saveState(); closeAddEmp(); render(); toast('Employee added ✓');
+}
+function deleteEmployee(idx) {
+  if (!confirm('Remove this employee?')) return;
+  state.employees.splice(idx, 1); saveState(); render(); toast('Employee removed');
+}
+function toggleEmployeeStatus(idx) {
+  const e = state.employees[idx];
+  e.status = e.status === 'active' ? 'inactive' : 'active';
+  saveState(); render(); toast(e.name + ' → ' + e.status);
+}
+function setEmpFilter(val) { window._empStatusFilter = val; render(); }
+
+// ── Business CRUD ─────────────────────────────────────────────────
+function openAddBiz() {
+  document.getElementById('addBizModal').style.display = 'flex';
+  document.getElementById('new-biz-name').value = '';
+  setTimeout(() => document.getElementById('new-biz-name').focus(), 50);
+}
+function closeAddBiz() { document.getElementById('addBizModal').style.display = 'none'; }
+function addBusiness() {
+  const name = document.getElementById('new-biz-name')?.value?.trim();
+  const currency = document.getElementById('new-biz-currency')?.value || 'QAR';
+  if (!name) { toast('Please enter a business name'); return; }
+  if (state.businesses.some(b => b.name.toLowerCase() === name.toLowerCase())) { toast('Business already exists'); return; }
+  state.businesses.push({ name, currency });
+  saveState(); closeAddBiz(); state.biz = state.businesses.length-1; render(); toast(`"${name}" added ✓`);
+}
+function openEditBiz(idx) {
+  const b = state.businesses[idx];
+  document.getElementById('edit-biz-idx').value = idx;
+  document.getElementById('edit-biz-name').value = b.name;
+  document.getElementById('edit-biz-currency').value = b.currency || 'QAR';
+  document.getElementById('editBizModal').style.display = 'flex';
+}
+function closeEditBiz() { document.getElementById('editBizModal').style.display = 'none'; }
+function saveBizEdit() {
+  const idx = parseInt(document.getElementById('edit-biz-idx').value);
+  const name = document.getElementById('edit-biz-name').value.trim();
+  const currency = document.getElementById('edit-biz-currency').value;
+  if (!name) { toast('Please enter a name'); return; }
+  state.businesses[idx].name = name;
+  state.businesses[idx].currency = currency;
+  saveState(); closeEditBiz(); render(); toast('Business updated ✓');
+}
+function confirmDeleteBiz() {
+  const idx = parseInt(document.getElementById('edit-biz-idx').value);
+  if (state.businesses.length <= 1) { toast('Cannot delete the only business'); return; }
+  if (!confirm(`Delete "${state.businesses[idx].name}" and all its data?`)) return;
+  state.businesses.splice(idx, 1);
+  state.transactions = state.transactions.filter(t=>t.biz!==idx).map(t=>({...t,biz:t.biz>idx?t.biz-1:t.biz}));
+  state.invoices = state.invoices.filter(i=>i.biz!==idx).map(i=>({...i,biz:i.biz>idx?i.biz-1:i.biz}));
+  state.employees = state.employees.filter(e=>e.biz!==idx).map(e=>({...e,biz:e.biz>idx?e.biz-1:e.biz}));
+  state.biz = 0;
+  saveState(); closeEditBiz(); render(); toast('Business deleted');
+}
+
+// ── Bill viewer ───────────────────────────────────────────────────
+function viewBill(idx) {
+  const t = state.transactions[idx];
+  if (!t.bill) return;
+  const content = document.getElementById('billViewContent');
+  const dlLink = document.getElementById('billDownloadLink');
+  dlLink.href = t.bill;
+  dlLink.download = t.billName || 'bill';
+  if (t.bill.startsWith('data:image')) {
+    content.innerHTML = `<img src="${t.bill}" style="max-width:100%;max-height:300px;border-radius:8px;border:0.5px solid var(--border)">`;
+  } else {
+    content.innerHTML = `<div style="padding:24px;background:var(--bg2);border-radius:8px;color:var(--text2)"><i class="ti ti-file-text" style="font-size:36px"></i><br><br><strong style="color:var(--text)">${t.billName||'bill.pdf'}</strong><br><span style="font-size:12px">PDF — tap Download to open</span></div>`;
+  }
+  document.getElementById('billViewModal').style.display = 'flex';
+}
+function closeBillView() { document.getElementById('billViewModal').style.display = 'none'; }
+
+// ── Export ────────────────────────────────────────────────────────
+function toggleDownloadMenu() { document.getElementById('dlDropdown').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  const menu = document.getElementById('dlMenu');
+  if (menu && !menu.contains(e.target)) document.getElementById('dlDropdown').classList.remove('open');
+});
+function downloadCSV(type) {
+  document.getElementById('dlDropdown').classList.remove('open');
+  let rows, filename;
+  if (type === 'transactions') {
+    rows = [['Business','Type','Category','Description','Amount','Date','Bill']];
+    state.transactions.forEach(t => rows.push([state.businesses[t.biz].name,t.type,t.cat,t.desc,t.amount,t.date,t.bill?t.billName||'attached':'']));
+    filename = 'wateen_transactions.csv';
+  } else if (type === 'invoices') {
+    rows = [['Invoice#','Business','Client','Amount','Issue Date','Due Date','Status']];
+    state.invoices.forEach(i => rows.push([i.inv,state.businesses[i.biz].name,i.client,i.amount,i.date,i.due,i.status]));
+    filename = 'wateen_invoices.csv';
+  } else {
+    rows = [['Business','Name','Role','Department','Monthly Salary','Annual Salary','Status']];
+    state.employees.forEach(e => rows.push([state.businesses[e.biz].name,e.name,e.role,e.dept,e.salary,e.salary*12,e.status]));
+    filename = 'wateen_payroll.csv';
+  }
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  triggerDownload('data:text/csv;charset=utf-8,' + encodeURIComponent(csv), filename);
+}
+function downloadJSON() {
+  document.getElementById('dlDropdown').classList.remove('open');
+  const exportData = { businesses:state.businesses, transactions:state.transactions.map(t=>{const{bill,...rest}=t;return{...rest,hasBill:!!bill};}), invoices:state.invoices, employees:state.employees, exportedAt:new Date().toISOString() };
+  triggerDownload('data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(exportData,null,2)),'wateen_data.json');
+}
+function triggerDownload(href, filename) {
+  const a = document.createElement('a'); a.href=href; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('Download started');
+}
+</script>
+</body>
+</html>
