@@ -6,6 +6,7 @@
 <title>WateenSync</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
 <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore-compat.js"></script>
 <style>
   :root {
@@ -41,7 +42,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: var(--font); background: var(--bg3); color: var(--text); min-height: 100vh; min-height: -webkit-fill-available; overflow-x: hidden; }
 
-  /* ── Layout ── */
+  /* Layout */
   #appWrapper { display: none; }
   .page-header {
     position: sticky; top: 0; z-index: 100;
@@ -54,7 +55,7 @@
   .header-right { display: flex; align-items: center; gap: 8px; }
   .wrapper { padding: 14px 14px calc(var(--nav-h) + var(--safe-bottom) + 16px); max-width: 680px; margin: 0 auto; }
 
-  /* ── Bottom Nav ── */
+  /* Bottom Nav */
   .bottom-nav {
     position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
     background: var(--bg); border-top: 0.5px solid var(--border);
@@ -72,7 +73,7 @@
   .bottom-nav button.active i { transform: scale(1.1); }
   .bottom-nav button:active { opacity: 0.7; }
 
-  /* ── Business pills (horizontal scroll) ── */
+  /* Business pills */
   .biz-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; padding: 0 14px 10px; margin: 0 -14px; scrollbar-width: none; }
   .biz-scroll::-webkit-scrollbar { display: none; }
   .biz-tabs { display: inline-flex; gap: 6px; padding: 2px 0; }
@@ -88,7 +89,7 @@
   .biz-tab-edit { padding: 4px 6px; border-radius: 6px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 12px; }
   .biz-tab-edit:active { background: var(--bg3); }
 
-  /* ── Metric cards ── */
+  /* Metric cards */
   .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
   .metric { background: var(--bg); border-radius: var(--radius); padding: 14px 14px; border: 0.5px solid var(--border); }
   .metric .label { font-size: 11px; color: var(--text2); margin-bottom: 5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -96,11 +97,11 @@
   .metric .sub { font-size: 11px; margin-top: 4px; }
   .pos { color: var(--green); } .neg { color: var(--red); }
 
-  /* ── Cards ── */
+  /* Cards */
   .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 10px; }
   .section-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; }
 
-  /* ── Tables → responsive cards on mobile ── */
+  /* Tables */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 480px; }
   th { text-align: left; padding: 8px 10px; font-size: 10px; font-weight: 600; color: var(--text2); border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -108,7 +109,7 @@
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--bg2); }
 
-  /* Mobile row-cards for transactions */
+  /* Mobile row-cards */
   .txn-cards { display: none; }
   .txn-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
   .txn-card-left { flex: 1; min-width: 0; }
@@ -118,7 +119,7 @@
   .txn-card-amount { font-size: 15px; font-weight: 700; flex-shrink: 0; }
   .txn-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-  /* ── Forms ── */
+  /* Forms */
   .form-stack { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
   .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-group { display: flex; flex-direction: column; gap: 4px; }
@@ -132,7 +133,7 @@
   .form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239a9a96' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
   .form-group input:focus, .form-group select:focus { border-color: var(--blue); background: var(--bg); }
 
-  /* ── Buttons ── */
+  /* Buttons */
   .btn { padding: 10px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text); font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); transition: all 0.15s; }
   .btn:active { opacity: 0.75; transform: scale(0.98); }
   .btn-primary { background: var(--text); color: var(--bg); border-color: transparent; }
@@ -141,19 +142,19 @@
   .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 8px; }
   .btn-danger { background: var(--red-bg); color: var(--red-text); border-color: transparent; }
 
-  /* ── Badges ── */
+  /* Badges */
   .badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; }
   .badge-success { background: var(--green-bg); color: var(--green-text); }
   .badge-warning { background: var(--amber-bg); color: var(--amber-text); }
   .badge-danger { background: var(--red-bg); color: var(--red-text); }
   .badge-info { background: var(--blue-bg); color: var(--blue-text); }
 
-  /* ── P&L rows ── */
+  /* P&L rows */
   .pl-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
   .pl-row.total { font-weight: 700; border-bottom: none; border-top: 1px solid var(--border2); padding-top: 10px; margin-top: 4px; font-size: 14px; }
   .pl-row.sub { padding-left: 16px; color: var(--text2); font-size: 12px; }
 
-  /* ── Misc ── */
+  /* Misc */
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
   .empty { text-align: center; padding: 2rem 1rem; color: var(--text2); font-size: 13px; }
   .bill-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 10px; font-size: 11px; background: var(--blue-bg); color: var(--blue-text); cursor: pointer; border: none; font-family: var(--font); }
@@ -161,11 +162,11 @@
   .attach-label:hover { border-color: var(--blue); color: var(--blue); }
   .divider { height: 0.5px; background: var(--border); margin: 12px 0; }
 
-  /* ── Toast ── */
+  /* Toast */
   .toast { position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 14px); left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* ── Modals ── */
+  /* Modals */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: flex-end; justify-content: center; padding: 0; }
   @media (min-width: 500px) { .modal-backdrop { align-items: center; padding: 20px; } }
   .modal {
@@ -178,14 +179,14 @@
   .modal-actions { display: flex; gap: 8px; margin-top: 18px; flex-direction: column; }
   .modal-actions-row { display: flex; gap: 8px; }
 
-  /* ── Sync bar ── */
+  /* Sync bar */
   .sync-bar { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); padding: 6px 0; }
   .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
   .sync-dot.syncing { background: #F5A623; animation: pulse 1s infinite; }
   .sync-dot.error { background: var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* ── Login ── */
+  /* Login */
   #loginScreen { position: fixed; inset: 0; background: var(--bg3); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .login-box { background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius-lg); padding: 36px 28px; width: 100%; max-width: 380px; box-shadow: 0 8px 40px rgba(0,0,0,0.10); }
   .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
@@ -201,7 +202,7 @@
   .logout-btn { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; font-family: var(--font); }
   .logout-btn:active { background: var(--red-bg); color: var(--red-text); }
 
-  /* ── Chart ── */
+  /* Chart */
   .chart-container { display: flex; gap: 14px; align-items: flex-end; height: 130px; padding-top: 10px; overflow-x: auto; }
   .chart-bar-group { flex: 1; min-width: 50px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
   .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 110px; }
@@ -209,24 +210,24 @@
   .chart-bar:hover { opacity: 0.7; }
   .chart-label { font-size: 10px; color: var(--text2); text-align: center; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-  /* ── Download dropdown ── */
+  /* Download dropdown */
   .download-menu { position: relative; display: inline-block; }
   .download-dropdown { position: absolute; right: 0; top: calc(100% + 6px); background: var(--bg); border: 0.5px solid var(--border2); border-radius: var(--radius); min-width: 190px; box-shadow: 0 4px 20px rgba(0,0,0,0.14); z-index: 300; display: none; }
   .download-dropdown.open { display: block; }
   .download-dropdown button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 11px 16px; border: none; background: transparent; color: var(--text); font-size: 13px; cursor: pointer; font-family: var(--font); text-align: left; }
   .download-dropdown button:hover { background: var(--bg2); }
 
-  /* ── Filter bar ── */
+  /* Filter bar */
   .filter-section { background: var(--bg2); border-radius: var(--radius); padding: 12px; margin-bottom: 10px; }
   .filter-section .form-row-2 { gap: 8px; }
   .filter-section input, .filter-section select { font-size: 13px; padding: 9px 10px; }
 
-  /* ── Two col on wider screens ── */
+  /* Two col on wider screens */
   @media (min-width: 620px) {
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   }
 
-  /* ── Mobile: show card list for transactions ── */
+  /* Mobile */
   @media (max-width: 540px) {
     .table-responsive-hide { display: none !important; }
     .txn-cards { display: block; }
@@ -235,17 +236,14 @@
     .metric-grid { gap: 6px; }
   }
 
-  /* ── Invoice cards on mobile ── */
+  /* Invoice cards */
   .inv-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; }
   .inv-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .inv-card-client { font-size: 14px; font-weight: 600; }
   .inv-card-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 3px; }
   .inv-card-actions { display: flex; gap: 6px; margin-top: 10px; }
 
-  /* Cloud sync info box */
-  .sync-info { background: var(--blue-bg); border: 0.5px solid var(--blue); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--blue-text); display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-
-  /* FAB for adding */
+  /* FAB */
   .fab { position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 14px); right: 16px; width: 52px; height: 52px; border-radius: 50%; background: var(--blue); color: #fff; border: none; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 16px rgba(55,138,221,0.4); z-index: 150; transition: transform 0.15s; }
   .fab:active { transform: scale(0.93); }
   .fab.hidden { display: none; }
@@ -273,9 +271,9 @@
       <label>Password</label>
       <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     </div>
-    <button class="login-btn" onclick="doLogin()"><i class="ti ti-lock-open" style="margin-right:6px"></i>Sign In</button>
+    <button class="login-btn" onclick="doLogin()" id="loginBtn"><i class="ti ti-lock-open" style="margin-right:6px"></i>Sign In</button>
     <div class="login-error" id="loginError">Incorrect username or password.</div>
-    <div class="login-footer">WateenSync &mdash; Admin Access Only</div>
+    <div class="login-footer">WateenSync &mdash; Secured by Firebase</div>
   </div>
 </div>
 
@@ -299,7 +297,7 @@
           <button onclick="downloadJSON()"><i class="ti ti-braces"></i> Full Data JSON</button>
         </div>
       </div>
-      <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout"></i></button>
+      <button class="logout-btn" onclick="doLogout()"><i class="ti ti-logout"></i> Logout</button>
     </div>
   </div>
 
@@ -511,22 +509,19 @@ const firebaseConfig = {
 // Initialize Firebase using compat mode
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth(); // Initialize Auth
 
 // ── Constants ──────────────────────────────────────────────────────
 const BIZ_COLORS = ['#378ADD','#1D9E75','#D85A30','#9B59B6','#E67E22','#1ABC9C','#E74C3C','#2ECC71'];
-const AUTH_KEY    = 'wateen_auth_v2';
-const ADMIN_USER  = 'admin';
-const ADMIN_PASS  = 'wateen2024';
 
 let txnFilter = { type: 'all', dateFrom: '', dateTo: '' };
 let _syncTimer = null;
-let _syncStatus = 'idle'; // idle | syncing | synced | error
+let _syncStatus = 'idle'; 
 
-// ── Cloud Storage Sync (Updated for Firestore) ──────────────────────
+// ── Cloud Storage Sync ──────────────────────
 async function cloudSave(data) {
   setSyncStatus('syncing');
   try {
-    // Saves to a collection called 'wateenApp' in a document called 'mainState'
     await db.collection("wateenApp").doc("mainState").set(data);
     setSyncStatus('synced');
   } catch(e) {
@@ -544,7 +539,7 @@ async function cloudLoad() {
       return docRef.data();
     } else {
       setSyncStatus('synced');
-      return null; // No data exists yet
+      return null; 
     }
   } catch(e) {
     console.error('Load error:', e);
@@ -581,91 +576,76 @@ const defaultState = {
   ],
   transactions: [
     { biz:0, type:'income', cat:'Sales', desc:'Product Sales', amount:42000, date:'2026-04-01', month:'Apr' },
-    { biz:0, type:'income', cat:'Consulting', desc:'Advisory Fee', amount:8500, date:'2026-04-10', month:'Apr' },
     { biz:0, type:'expense', cat:'Rent', desc:'Office Rent', amount:6000, date:'2026-04-05', month:'Apr' },
-    { biz:0, type:'expense', cat:'Utilities', desc:'Electricity', amount:1200, date:'2026-04-07', month:'Apr' },
-    { biz:0, type:'expense', cat:'Supplies', desc:'Office Supplies', amount:900, date:'2026-04-15', month:'Apr' },
-    { biz:1, type:'income', cat:'Services', desc:'Cleaning Contract', amount:22000, date:'2026-04-01', month:'Apr' },
-    { biz:1, type:'income', cat:'Services', desc:'Maintenance Contract', amount:9000, date:'2026-04-12', month:'Apr' },
-    { biz:1, type:'expense', cat:'Labor', desc:'Staff Wages', amount:14000, date:'2026-04-28', month:'Apr' },
-    { biz:2, type:'income', cat:'SaaS', desc:'Subscription Revenue', amount:55000, date:'2026-04-01', month:'Apr' },
-    { biz:2, type:'income', cat:'SaaS', desc:'One-time Setup', amount:12000, date:'2026-04-08', month:'Apr' },
-    { biz:2, type:'expense', cat:'Infrastructure', desc:'Cloud Hosting', amount:8000, date:'2026-04-03', month:'Apr' },
-    { biz:2, type:'expense', cat:'Salaries', desc:'Dev Team', amount:28000, date:'2026-04-30', month:'Apr' },
   ],
   invoices: [
     { biz:0, client:'Alpha Trading', amount:15000, date:'2026-04-05', due:'2026-05-05', status:'paid', inv:'INV-001' },
-    { biz:0, client:'Beta Corp', amount:8500, date:'2026-04-15', due:'2026-05-15', status:'pending', inv:'INV-002' },
-    { biz:0, client:'Gamma LLC', amount:4200, date:'2026-03-20', due:'2026-04-20', status:'overdue', inv:'INV-003' },
-    { biz:1, client:'City Hall', amount:22000, date:'2026-04-01', due:'2026-04-30', status:'paid', inv:'INV-004' },
-    { biz:1, client:'Plaza Hotel', amount:9000, date:'2026-04-12', due:'2026-05-12', status:'pending', inv:'INV-005' },
-    { biz:2, client:'FinTech Co', amount:55000, date:'2026-04-01', due:'2026-04-30', status:'paid', inv:'INV-006' },
-    { biz:2, client:'StartupX', amount:12000, date:'2026-04-08', due:'2026-05-08', status:'pending', inv:'INV-007' },
   ],
   employees: [
     { biz:0, name:'Sara Al-Mansouri', role:'Store Manager', salary:12000, dept:'Operations', status:'active' },
-    { biz:0, name:'Khalid Hassan', role:'Sales Associate', salary:6500, dept:'Sales', status:'active' },
-    { biz:1, name:'Tariq Nasser', role:'Supervisor', salary:9000, dept:'Operations', status:'active' },
-    { biz:1, name:'Fatima Qasim', role:'Cleaner', salary:4500, dept:'Operations', status:'active' },
-    { biz:2, name:'Nour El-Din', role:'Lead Developer', salary:18000, dept:'Engineering', status:'active' },
-    { biz:2, name:'Leila Farouk', role:'Product Manager', salary:16000, dept:'Product', status:'active' },
   ]
 };
 
 let state = JSON.parse(JSON.stringify(defaultState));
 
-// ── Boot ──────────────────────────────────────────────────────────
-async function boot() {
-  if (!checkAuth()) {
-    document.getElementById('loginScreen').style.display = 'flex';
-    setTimeout(() => document.getElementById('login-user').focus(), 100);
-    return;
-  }
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('appWrapper').style.display = 'block';
-
-  // Load from cloud
-  const saved = await cloudLoad();
-  if (saved) {
-    state = saved;
-  }
-  state.tab = state.tab || 'dashboard';
-  state.biz = state.biz || 0;
-  render();
-}
-
-boot();
-
-// ── Auth ──────────────────────────────────────────────────────────
-function checkAuth() { return sessionStorage.getItem(AUTH_KEY) === 'true'; }
-
-function doLogin() {
-  const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pass').value;
-  const err = document.getElementById('loginError');
-  if (u === ADMIN_USER && p === ADMIN_PASS) {
-    sessionStorage.setItem(AUTH_KEY, 'true');
+// ── Auth & Boot ───────────────────────────────────────────────────
+// This Firebase observer automatically handles user login state, even after page refreshes!
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    // User is signed in.
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appWrapper').style.display = 'block';
-    err.classList.remove('show');
-    cloudLoad().then(saved => {
-      if (saved) { state = saved; state.tab = state.tab||'dashboard'; state.biz = state.biz||0; }
-      render();
-    });
+    
+    const saved = await cloudLoad();
+    if (saved) { state = saved; }
+    state.tab = state.tab || 'dashboard';
+    state.biz = state.biz || 0;
+    render();
   } else {
+    // No user is signed in.
+    document.getElementById('appWrapper').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    setTimeout(() => document.getElementById('login-user').focus(), 100);
+  }
+});
+
+async function doLogin() {
+  let email = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+  
+  if (!email || !pass) return;
+
+  // THE TRICK: If the user didn't type an '@', add '@wateen.com' to it
+  if (!email.includes('@')) {
+    email = email + '@wateen.com';
+  }
+
+  btn.innerHTML = 'Signing in...';
+  err.classList.remove('show');
+
+  try {
+    // Tell Firebase to authenticate
+    await auth.signInWithEmailAndPassword(email, pass);
+    btn.innerHTML = '<i class="ti ti-lock-open" style="margin-right:6px"></i>Sign In';
+    // Success! The onAuthStateChanged listener above will automatically hide the login screen and load data.
+  } catch (error) {
+    console.error(error);
+    err.textContent = 'Incorrect username or password.';
     err.classList.add('show');
+    btn.innerHTML = '<i class="ti ti-lock-open" style="margin-right:6px"></i>Sign In';
     document.getElementById('login-pass').value = '';
     document.getElementById('login-pass').focus();
   }
 }
 
 function doLogout() {
-  sessionStorage.removeItem(AUTH_KEY);
-  document.getElementById('appWrapper').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
-  document.getElementById('loginError').classList.remove('show');
+  auth.signOut().then(() => {
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    // The onAuthStateChanged listener will automatically show the login screen.
+  });
 }
 
 // ── State helpers ─────────────────────────────────────────────────
@@ -700,13 +680,11 @@ function calcBiz(bizIdx, month) {
 
 // ── Render ────────────────────────────────────────────────────────
 function render() {
-  // Update nav
   ['dashboard','income','pl','invoices','payroll'].forEach(tab => {
     const btn = document.getElementById('nav-' + tab);
     if (btn) btn.className = state.tab === tab ? 'active' : '';
   });
 
-  // FAB visibility
   const fab = document.getElementById('fabBtn');
   if (['income','invoices','payroll'].includes(state.tab)) {
     fab.className = 'fab';
@@ -886,7 +864,6 @@ function renderIncome() {
       <div class="section-title" style="margin:0"><i class="ti ti-list"></i> Transactions <span style="font-size:11px;font-weight:400;color:var(--text2)">(${txns.length})</span></div>
     </div>`;
 
-  // Mobile card view
   html += `<div class="txn-cards">`;
   if (!txns.length) {
     html += `<div class="empty">No transactions yet. Tap + to add one.</div>`;
@@ -910,7 +887,6 @@ function renderIncome() {
   }
   html += `</div>`;
 
-  // Desktop table view
   html += `<div class="table-wrap table-responsive-hide"><table>
     <thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th>Amount</th><th>Bill</th><th></th></tr></thead>
     <tbody>`;
@@ -975,7 +951,6 @@ function renderInvoices() {
   html += `<div class="card">
     <div class="section-title"><i class="ti ti-file-invoice"></i> Invoices (${filtered.length})</div>`;
 
-  // Mobile card view
   html += `<div class="txn-cards">`;
   if (!sorted.length) {
     html += `<div class="empty">No invoices yet. Tap + to create one.</div>`;
@@ -1000,7 +975,6 @@ function renderInvoices() {
   }
   html += `</div>`;
 
-  // Desktop table
   html += `<div class="table-wrap table-responsive-hide"><table>
     <thead><tr><th>Invoice#</th><th>Business</th><th>Client</th><th>Amount</th><th>Issue</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>`;
   if (!sorted.length) {
@@ -1054,7 +1028,6 @@ function renderPayroll() {
       </div>
     </div>`;
 
-  // Mobile card list
   html += `<div class="txn-cards">`;
   if (!displayList.length) {
     html += `<div class="empty">No employees found. Tap + to add one.</div>`;
@@ -1079,7 +1052,6 @@ function renderPayroll() {
   }
   html += `</div>`;
 
-  // Desktop table
   html += `<div class="table-wrap table-responsive-hide"><table>
     <thead><tr><th>Name</th><th>Business</th><th>Role</th><th>Dept</th><th>Monthly</th><th>Annual</th><th>Status</th><th></th></tr></thead><tbody>`;
   if (!displayList.length) {
@@ -1251,23 +1223,6 @@ function confirmDeleteBiz() {
   saveState(); closeEditBiz(); render(); toast('Business deleted');
 }
 
-// ── Bill viewer ───────────────────────────────────────────────────
-function viewBill(idx) {
-  const t = state.transactions[idx];
-  if (!t.bill) return;
-  const content = document.getElementById('billViewContent');
-  const dlLink = document.getElementById('billDownloadLink');
-  dlLink.href = t.bill;
-  dlLink.download = t.billName || 'bill';
-  if (t.bill.startsWith('data:image')) {
-    content.innerHTML = `<img src="${t.bill}" style="max-width:100%;max-height:300px;border-radius:8px;border:0.5px solid var(--border)">`;
-  } else {
-    content.innerHTML = `<div style="padding:24px;background:var(--bg2);border-radius:8px;color:var(--text2)"><i class="ti ti-file-text" style="font-size:36px"></i><br><br><strong style="color:var(--text)">${t.billName||'bill.pdf'}</strong><br><span style="font-size:12px">PDF — tap Download to open</span></div>`;
-  }
-  document.getElementById('billViewModal').style.display = 'flex';
-}
-function closeBillView() { document.getElementById('billViewModal').style.display = 'none'; }
-
 // ── Export ────────────────────────────────────────────────────────
 function toggleDownloadMenu() { document.getElementById('dlDropdown').classList.toggle('open'); }
 document.addEventListener('click', e => {
@@ -1278,8 +1233,8 @@ function downloadCSV(type) {
   document.getElementById('dlDropdown').classList.remove('open');
   let rows, filename;
   if (type === 'transactions') {
-    rows = [['Business','Type','Category','Description','Amount','Date','Bill']];
-    state.transactions.forEach(t => rows.push([state.businesses[t.biz].name,t.type,t.cat,t.desc,t.amount,t.date,t.bill?t.billName||'attached':'']));
+    rows = [['Business','Type','Category','Description','Amount','Date']];
+    state.transactions.forEach(t => rows.push([state.businesses[t.biz].name,t.type,t.cat,t.desc,t.amount,t.date]));
     filename = 'wateen_transactions.csv';
   } else if (type === 'invoices') {
     rows = [['Invoice#','Business','Client','Amount','Issue Date','Due Date','Status']];
@@ -1295,7 +1250,7 @@ function downloadCSV(type) {
 }
 function downloadJSON() {
   document.getElementById('dlDropdown').classList.remove('open');
-  const exportData = { businesses:state.businesses, transactions:state.transactions.map(t=>{const{bill,...rest}=t;return{...rest,hasBill:!!bill};}), invoices:state.invoices, employees:state.employees, exportedAt:new Date().toISOString() };
+  const exportData = { businesses:state.businesses, transactions:state.transactions, invoices:state.invoices, employees:state.employees, exportedAt:new Date().toISOString() };
   triggerDownload('data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(exportData,null,2)),'wateen_data.json');
 }
 function triggerDownload(href, filename) {
